@@ -1,0 +1,57 @@
+include:
+  - project: 'bhpc/ci'
+    ref: master
+    file:
+      - '/java11.yml'
+      - '/helm/base.yml'
+      - '/jar11.yml'
+
+
+variables:
+  BHEX_APPLICATION: "java"
+  APP_ENTRY: "stress-server"
+  APP_HTTP_PORT: 7222
+  APP_GRPC_PORT: 7022
+  APP_REPLICAS: 3
+
+.deploy_master:
+  extends:
+  - .helm_deploy
+  variables:
+    KUBE_CONFIG: "${MASTER_KUBE_CONFIG}"
+    ENV_NAME: "${MASTER_ENV_NAME}"
+  environment:
+    name: ${MASTER_ENV_NAME}
+    url: https://${MASTER_ENV_DOMAIN}
+  when: manual
+  only:
+    refs:
+    - master
+    variables:
+    - $MASTER_KUBE_CONFIG
+    - $MASTER_ENV_NAME
+    - $MASTER_ENV_DOMAIN
+
+deploy:stress-ws:
+  extends:
+  - .deploy_master
+  variables:
+    APP_NAME: "stress-ws"
+
+deploy:stress-quote-ws:
+  extends:
+  - .deploy_master
+  variables:
+    APP_NAME: "stress-quote-ws"
+
+deploy:stress-openapi:
+  extends:
+  - .deploy_master
+  variables:
+    APP_NAME: "stress-openapi"
+
+deploy:stress-quote:
+  extends:
+    - .deploy_master
+  variables:
+    APP_NAME: "stress-quote"
